@@ -1,18 +1,12 @@
 // api/finish.js
-const fetch = require('node-fetch');
-module.exports = async (req, res) => {
-  const { session } = req.query;
-  if (req.method !== 'GET' || !session) return res.status(400).end();
-  const lookup = await fetch(`${process.env.UPSTASH_URL}/get/${session}`, {
-    headers: { Authorization: `Bearer ${process.env.UPSTASH_TOKEN}` }
-  });
-  const { result } = await lookup.json();
-  if (!result) return res.status(404).end();
-  const user = JSON.parse(result);
-  await fetch(`${process.env.UPSTASH_URL}/set/${session}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.UPSTASH_TOKEN}` },
-    body: JSON.stringify({ ...user, valid: true, purchasedAt: Date.now() })
-  });
-  res.redirect(302, `${process.env.BASE_URL}/api/init?userid=${user.userid}&username=${encodeURIComponent(user.username)}`);
-};
+import { getDb } from '../../lib/db'
+export default async (req,res)=>{
+  if(req.method!=='GET')return res.status(405).end()
+  const{session}=req.query
+  if(!session)return res.status(400).end()
+  const db=await getDb()
+  const doc=await db.collection('sessions').findOne({session})
+  if(!doc)return res.status(404).end()
+  await db.collection('sessions').updateOne({session},{$set:{valid:true,purchasedAt:Date.now()}})
+  res.redirect(302,`${process.env.BASE_URL}/api/init?userid=${doc.userid}&username=${encodeURIComponent(doc.username)}`)
+}

@@ -1,7 +1,7 @@
 // api/script/loader.js
-export default (req,res)=>{
-  if(req.method!=='GET')return res.status(405).end()
-  const lua=`
+export default (req, res) => {
+  if (req.method !== 'GET') return res.status(405).end()
+  const lua = `
 local H=game:GetService("HttpService")
 local P=game.Players.LocalPlayer
 local function makal_request(d)
